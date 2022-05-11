@@ -56,6 +56,11 @@ resource "aws_s3_bucket" "website_bucket" {
   tags = local.tags
 }
 
+
+resource "aws_s3_bucket_acl" "b_acl" {
+  bucket = aws_s3_bucket.website_bucket.id
+  acl    = "private"
+}
 ################################################################################################################
 ## Configure the credentials and access to the bucket for a deployment user
 ################################################################################################################
@@ -87,6 +92,12 @@ resource "aws_iam_policy_attachment" "site-deployer-attach-user-policy" {
 ################################################################################################################
 ## Create a Cloudfront distribution for the static website
 ################################################################################################################
+
+
+resource "aws_cloudfront_origin_access_identity" "this" {
+  comment = var.domain
+}
+
 resource "aws_cloudfront_distribution" "website_cdn" {
   enabled         = true
   is_ipv6_enabled = var.ipv6
@@ -97,16 +108,9 @@ resource "aws_cloudfront_distribution" "website_cdn" {
     origin_id   = "origin-bucket-${aws_s3_bucket.website_bucket.id}"
     domain_name = aws_s3_bucket.website_bucket.website_endpoint
     origin_path = var.origin_path
-    custom_origin_config {
-      origin_protocol_policy = "http-only"
-      http_port              = "80"
-      https_port             = "443"
-      origin_ssl_protocols   = ["TLSv1"]
-    }
 
-    custom_header {
-      name  = "User-Agent"
-      value = var.duplicate-content-penalty-secret
+    s3_origin_config {
+      origin_access_identity = aws_cloudfront_origin_access_identity.this.id
     }
   }
 
