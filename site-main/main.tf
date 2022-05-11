@@ -34,7 +34,7 @@ data "template_file" "bucket_policy" {
   vars = {
     bucket = var.bucket_name
     secret = var.duplicate-content-penalty-secret
-    origin-access-arn = aws_cloudfront_origin_access_identity.this.arn
+    origin-access-arn = aws_cloudfront_origin_access_identity.this.iam_arn
 
   }
 }
