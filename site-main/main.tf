@@ -34,6 +34,8 @@ data "template_file" "bucket_policy" {
   vars = {
     bucket = var.bucket_name
     secret = var.duplicate-content-penalty-secret
+    origin-access-arn = aws_cloudfront_origin_access_identity.this.arn
+
   }
 }
 
@@ -42,6 +44,13 @@ resource "aws_s3_bucket" "website_bucket" {
   policy        = data.template_file.bucket_policy.rendered
   force_destroy = var.force_destroy
 
+  # cors_rule {
+  #   allowed_headers = var.s3_cors_allowed_headers
+  #   allowed_methods = var.s3_cors_allowed_methods
+  #   allowed_origins = var.s3_cors_allowed_origins
+  #   expose_headers  = var.s3_cors_expose_headers
+  #   max_age_seconds = 0
+  # }
   website {
     index_document = "index.html"
     error_document = "404.html"
@@ -106,7 +115,7 @@ resource "aws_cloudfront_distribution" "website_cdn" {
 
   origin {
     origin_id   = "origin-bucket-${aws_s3_bucket.website_bucket.id}"
-    domain_name = aws_s3_bucket.website_bucket.website_endpoint
+    domain_name = aws_s3_bucket.website_bucket.bucket_regional_domain_name
     origin_path = var.origin_path
 
     s3_origin_config {
