@@ -2,10 +2,20 @@ variable "region" {
   default = "us-east-1"
 }
 
+variable "origin_path" {
+   default = "/"
+}
 variable "domain" {
   type = string
 }
 
+variable "forbidden-response-path" {
+  default = "/index.html"
+}
+
+variable "forbidden-response-code" {
+  default = "200"
+}
 variable "bucket_name" {
   type        = string
   description = "The name of the S3 bucket to create."
