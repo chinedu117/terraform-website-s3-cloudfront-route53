@@ -96,7 +96,7 @@ resource "aws_cloudfront_distribution" "website_cdn" {
   origin {
     origin_id   = "origin-bucket-${aws_s3_bucket.website_bucket.id}"
     domain_name = aws_s3_bucket.website_bucket.website_endpoint
-
+    origin_path = var.origin_path
     custom_origin_config {
       origin_protocol_policy = "http-only"
       http_port              = "80"
@@ -117,6 +117,13 @@ resource "aws_cloudfront_distribution" "website_cdn" {
     error_caching_min_ttl = "360"
     response_code         = var.not-found-response-code
     response_page_path    = var.not-found-response-path
+  }
+
+   custom_error_response {
+    error_code            = "403"
+    error_caching_min_ttl = "360"
+    response_code         = var.forbidden-response-code
+    response_page_path    = var.forbidden-response-path
   }
 
   default_cache_behavior {
