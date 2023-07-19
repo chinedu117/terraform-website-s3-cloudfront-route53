@@ -69,6 +69,14 @@ resource "aws_s3_bucket" "website_bucket" {
 resource "aws_s3_bucket_acl" "b_acl" {
   bucket = aws_s3_bucket.website_bucket.id
   acl    = "private"
+  depends_on = [aws_s3_bucket_ownership_controls.s3_bucket_acl_ownership]
+}
+
+resource "aws_s3_bucket_ownership_controls" "s3_bucket_acl_ownership" {
+  bucket = aws_s3_bucket.website_bucket.id
+  rule {
+    object_ownership = "BucketOwnerPreferred"
+  }
 }
 ################################################################################################################
 ## Configure the credentials and access to the bucket for a deployment user
@@ -108,6 +116,7 @@ resource "aws_cloudfront_origin_access_identity" "this" {
 }
 
 resource "aws_cloudfront_distribution" "website_cdn" {
+  depends_on = [aws_s3_bucket.website_bucket]
   enabled         = true
   is_ipv6_enabled = var.ipv6
   price_class     = var.price_class
@@ -115,8 +124,8 @@ resource "aws_cloudfront_distribution" "website_cdn" {
 
   origin {
     origin_id   = "origin-bucket-${aws_s3_bucket.website_bucket.id}"
-    domain_name = aws_s3_bucket.website_bucket.bucket_regional_domain_name
-    origin_path = var.origin_path
+    domain_name = aws_s3_bucket.website_bucket.bucket_domain_name
+    # origin_path = var.origin_path
 
     s3_origin_config {
        origin_access_identity = aws_cloudfront_origin_access_identity.this.cloudfront_access_identity_path
